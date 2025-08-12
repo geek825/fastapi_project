@@ -29,6 +29,7 @@ def get_signup(request: Request):
 
 @app.post("/signup", tags=["signup"])
 def signup(user : UserCreate):
+    conn = None
     try:
         conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a.singapore-postgres.render.com:5432/expenses_db_041z" ))
         
@@ -119,7 +120,6 @@ def add_expense(user : Expense) :
 def get_expense(current_user: dict = Depends(get_current_user)):
     try:
         conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a.singapore-postgres.render.com:5432/expenses_db_041z"))
-
         cur = conn.cursor()
         cur.execute("SELECT user_id, amount, description, category, date FROM expenses WHERE user_id = %s", (current_user["id"],))
         expenses = cur.fetchall()
@@ -189,8 +189,7 @@ def delete_expense(id : int) :
 
     except Exception as e :
         return {"error" : str(e)}
-    
-    
+
     finally :
         cur.close()
         conn.close()
