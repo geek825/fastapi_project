@@ -56,7 +56,6 @@ def get_login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 @app.post("/login", tags=["login"])
 def login(user : Userlogin):
-    conn = None
     try:
         conn = psycopg2.connect(
             dbname="daily",
@@ -89,9 +88,8 @@ def login(user : Userlogin):
     except Exception as e:
         return {"error": str(e)}
     finally:
-        if conn:
-            cur.close()
-            conn.close()
+        cur.close()
+        conn.close()
 
 
 @app.post("/expense" , tags= ["expense"])
