@@ -118,13 +118,7 @@ def add_expense(user : Expense) :
 @app.get("/expense" , tags = ["expense"])
 def get_expense(current_user: dict = Depends(get_current_user)):
     try:
-        conn = psycopg2.connect(
-            dbname="daily",
-            user="postgres",
-            password="12345",
-            host="localhost",
-            port="5433"
-        )
+        conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a/expenses_db_041z"))
 
         cur = conn.cursor()
         cur.execute("SELECT user_id, amount, description, category, date FROM expenses WHERE user_id = %s", (current_user["id"],))
@@ -154,7 +148,7 @@ def get_expense(current_user: dict = Depends(get_current_user)):
 @app.put("/expense/{id}", tags=["expenses Update"])
 def update_expense(id: int , expense : Expense):
     try:
-        conn =  conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a/expenses_db_041z"))
+        conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a/expenses_db_041z"))
         cur = conn.cursor()
         cur.execute("SELECT id FROM expenses WHERE id = %s ", (id,))
         if not cur.fetchone():
@@ -181,7 +175,7 @@ def update_expense(id: int , expense : Expense):
 @app.delete("/expense/{id}" , tags = ["expense delete"])
 def delete_expense(id : int) :
     try :
-        conn =  conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a/expenses_db_041z"))
+        conn  = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a/expenses_db_041z"))
         cur = conn.cursor()
         cur.execute("DELETE FROM expenses WHERE id = %s" , (id,))
         
