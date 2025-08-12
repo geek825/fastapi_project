@@ -12,14 +12,14 @@ import os
 app = FastAPI()
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
-def get_connection():
-    return psycopg2.connect(
-        dbname=os.environ.get("expenses_db_041z"),
-        user=os.environ.get("expenses_db_041z_user"),
-        password=os.environ.get("rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T"),
-        host=os.environ.get("dpg-d2dfujc9c44c73f6n6o0-a"),
-        port=os.environ.get("5432")
-    )
+# def get_connection():
+#     # return psycopg2.connect(
+#     #     dbname=os.environ.get("expenses_db_041z"),
+#     #     user=os.environ.get("expenses_db_041z_user"),
+#     #     password=os.environ.get("rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T"),
+#     #     host=os.environ.get("dpg-d2dfujc9c44c73f6n6o0-a"),
+#     #     port=os.environ.get("5432")
+#     # )
 
 
 
@@ -30,8 +30,7 @@ def get_signup(request: Request):
 @app.post("/signup", tags=["signup"])
 def signup(user : UserCreate):
     try:
-        conn = get_connection()
-        cur = conn.cursor()
+        conn =  conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a/expenses_db_041z"))
         
         first_name = user.first_name 
         last_name = user.last_name
@@ -39,6 +38,8 @@ def signup(user : UserCreate):
         password = user.password 
         hobbies = user.hobbies 
         
+
+        cur = conn.cursor()
         cur.execute("SELECT * FROM users WHERE email = %s", (email,))
         if cur.fetchone():
             return {"message": "User already exists"}
@@ -64,12 +65,12 @@ def login(user : Userlogin):
     conn = None
     cur = None
     try:
-        conn = get_connection()
-        cur = conn.cursor()
+        conn =  conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a/expenses_db_041z"))
         
         email = user.email
         password = user.password
-    
+        
+        cur = conn.cursor()
         cur.execute("SELECT id, password FROM users WHERE email = %s", (email,))
         result = cur.fetchone()
         if not result:
@@ -98,9 +99,7 @@ def login(user : Userlogin):
 @app.post("/expense" , tags= ["expense"])
 def add_expense(user : Expense) :
     try :
-        conn = get_connection()
-        cur = conn.cursor()
-        
+        conn =  conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a/expenses_db_041z"))
         amount = user.amount
         description = user.description
         category = user.category
@@ -119,10 +118,15 @@ def add_expense(user : Expense) :
 @app.get("/expense" , tags = ["expense"])
 def get_expense(current_user: dict = Depends(get_current_user)):
     try:
-        conn = get_connection()
+        conn = psycopg2.connect(
+            dbname="daily",
+            user="postgres",
+            password="12345",
+            host="localhost",
+            port="5433"
+        )
+
         cur = conn.cursor()
-        
-        
         cur.execute("SELECT user_id, amount, description, category, date FROM expenses WHERE user_id = %s", (current_user["id"],))
         expenses = cur.fetchall()
         
@@ -150,7 +154,7 @@ def get_expense(current_user: dict = Depends(get_current_user)):
 @app.put("/expense/{id}", tags=["expenses Update"])
 def update_expense(id: int , expense : Expense):
     try:
-        conn = get_connection()
+        conn =  conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a/expenses_db_041z"))
         cur = conn.cursor()
         cur.execute("SELECT id FROM expenses WHERE id = %s ", (id,))
         if not cur.fetchone():
@@ -177,8 +181,7 @@ def update_expense(id: int , expense : Expense):
 @app.delete("/expense/{id}" , tags = ["expense delete"])
 def delete_expense(id : int) :
     try :
-        conn = get_connection()
-        
+        conn =  conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a/expenses_db_041z"))
         cur = conn.cursor()
         cur.execute("DELETE FROM expenses WHERE id = %s" , (id,))
         
