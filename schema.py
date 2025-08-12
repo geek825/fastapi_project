@@ -1,6 +1,10 @@
 from pydantic import BaseModel
+
 from typing import List
 from datetime import date
+
+from typing import List 
+
 
 class UserCreate(BaseModel):
     first_name: str
@@ -15,6 +19,7 @@ class Userlogin(BaseModel):
     email: str
     password : str
     # hobbies: List[str]
+
 class Expense(BaseModel) :
     id : int
     amount : int 
@@ -29,5 +34,6 @@ class Expense(BaseModel) :
 #     category = str
 #     date = date 
       
+
     class Config:
         from_attributes = True

@@ -23,3 +23,5 @@ class Exenses(Base) :
     date = Column(String , nullable = False)
 
     
+
+    

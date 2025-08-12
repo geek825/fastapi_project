@@ -1,4 +1,5 @@
 
+
 from fastapi import FastAPI, Request, Form , Depends , HTTPException 
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -31,7 +32,7 @@ def signup(user : UserCreate):
         password = user.password 
         hobbies = user.hobbies 
         
-        
+
         cur = conn.cursor()
         cur.execute("SELECT * FROM users WHERE email = %s", (email,))
         if cur.fetchone():
@@ -191,7 +192,7 @@ def update_expense(id: int , expense : Expense):
         raise HTTPException(status_code=500, detail=str(e))
     
     
-@app.delete("/expense/delete/{id}" , tags = ["expense delete"])
+@app.delete("/expense/{id}" , tags = ["expense delete"])
 def delete_expense(id : int) :
     try :
         conn = psycopg2.connect(
@@ -208,7 +209,7 @@ def delete_expense(id : int) :
         
         if not cur.rowcount:
             conn.rollback()
-            raise HTTPException(status_code= 404 , detail = "Expense not found ")
+            raise HTTPException(status_code= 404 , detail = "Expense not")
         
         conn.commit()
         
