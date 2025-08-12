@@ -191,7 +191,7 @@ def update_expense(id: int , expense : Expense):
         raise HTTPException(status_code=500, detail=str(e))
     
     
-@app.delete("/expense/{id}" , tags = ["expense delete"])
+@app.delete("/expense/delete/{id}" , tags = ["expense delete"])
 def delete_expense(id : int) :
     try :
         conn = psycopg2.connect(
@@ -205,6 +205,11 @@ def delete_expense(id : int) :
         
         cur = conn.cursor()
         cur.execute("DELETE FROM expenses WHERE id = %s" , (id,))
+        
+        if not cur.rowcount:
+            conn.rollback()
+            raise HTTPException(status_code= 404 , detail = "Expense not found ")
+        
         conn.commit()
         
         return {"message" : "Expenses deleted successfully" }
