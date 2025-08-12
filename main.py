@@ -56,6 +56,7 @@ def get_login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 @app.post("/login", tags=["login"])
 def login(user : Userlogin):
+    conn = None
     try:
         conn = psycopg2.connect(
             dbname="daily",
@@ -154,10 +155,6 @@ def get_expense(current_user: dict = Depends(get_current_user)):
         cur.close()
         conn.close()
             
-            
-  
-        
-        
 
 @app.put("/expense/{id}", tags=["expenses Update"])
 def update_expense(id: int , expense : Expense):
