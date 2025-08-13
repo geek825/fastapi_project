@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from typing import List
+from typing import List , Optional
 from datetime import date
 
 from typing import List 
@@ -21,7 +21,7 @@ class Userlogin(BaseModel):
     # hobbies: List[str]
 
 class Expense(BaseModel) :
-    id : int
+    id: Optional[int] = None
     amount : int 
     description : str
     category :str

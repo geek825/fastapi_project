@@ -12,15 +12,6 @@ import os
 app = FastAPI()
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
-# def get_connection():
-#     # return psycopg2.connect(
-#     #     dbname=os.environ.get("expenses_db_041z"),
-#     #     user=os.environ.get("expenses_db_041z_user"),
-#     #     password=os.environ.get("rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T"),
-#     #     host=os.environ.get("dpg-d2dfujc9c44c73f6n6o0-a"),
-#     #     port=os.environ.get("5432")
-#     # )
-
 
 
 @app.get("/signup", response_model = UserCreate)
@@ -29,10 +20,14 @@ def get_signup(request: Request):
 
 @app.post("/signup", tags=["signup"])
 def signup(user : UserCreate):
-    conn = None
     try:
-        conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a.singapore-postgres.render.com:5432/expenses_db_041z" ))
-        
+        conn = psycopg2.connect(
+            dbname="daily",
+            user="postgres",
+            password="12345",
+            host="localhost",
+            port="5433"
+        )
         first_name = user.first_name 
         last_name = user.last_name
         email = user.email
@@ -47,8 +42,8 @@ def signup(user : UserCreate):
 
         hashed_pwd = hash_password(password)
         cur.execute(
-            "INSERT INTO users (first_name, last_name, email, password, hobbies) VALUES (%s, %s, %s, %s, %s)",
-            (first_name, last_name, email, hashed_pwd, hobbies)
+            "INSERT INTO users ( first_name, last_name, email, password, hobbies) VALUES (%s, %s, %s, %s, %s)",
+            ( first_name, last_name, email, hashed_pwd, hobbies)
         )
         conn.commit()
         return {"message": "User signup successful"}
@@ -66,7 +61,13 @@ def login(user : Userlogin):
     conn = None
     cur = None
     try:
-        conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a.singapore-postgres.render.com:5432/expenses_db_041z"))
+        conn = psycopg2.connect(
+            dbname="daily",
+            user="postgres",
+            password="12345",
+            host="localhost",
+            port="5433"
+        )
         
         email = user.email
         password = user.password
@@ -85,7 +86,7 @@ def login(user : Userlogin):
 
         return {
             "access_token": access_token,
-            "token_type": "bearer"
+            "user_id" : user_id
         }
 
     except Exception as e:
@@ -98,9 +99,16 @@ def login(user : Userlogin):
 
 
 @app.post("/expense" , tags= ["expense"])
-def add_expense(user : Expense) :
+def add_expense(user : Expense , current_user:dict = Depends(get_current_user)) :
     try :
-        conn = psycopg2.connect (os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a.singapore-postgres.render.com:5432/expenses_db_041z"))
+        conn = psycopg2.connect(
+            dbname="daily",
+            user="postgres",
+            password="12345",
+            host="localhost",
+            port="5433"
+        )
+        user_id = current_user["id"]
         amount = user.amount
         description = user.description
         category = user.category
@@ -108,7 +116,7 @@ def add_expense(user : Expense) :
         
         
         cur = conn.cursor()
-        cur.execute("INSERT INTO expenses (amount, description, category, date) VALUES (%s, %s, %s, %s)", (amount, description, category, date))
+        cur.execute("INSERT INTO expenses (amount, description, category, date , user_id) VALUES (%s, %s, %s, %s, %s)", ( amount, description, category, date , user_id))
         conn.commit()
         return {"message": "Expense added successfully"}
     
@@ -116,18 +124,25 @@ def add_expense(user : Expense) :
         return {"error" : str(e)}
     
     
-@app.get("/expense" , tags = ["expense"])
+@app.get("/expense" , response_model=List[Expense] , tags = ["expense"])
 def get_expense(current_user: dict = Depends(get_current_user)):
     try:
-        conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a.singapore-postgres.render.com:5432/expenses_db_041z"))
+        conn = psycopg2.connect(
+            dbname="daily",
+            user="postgres",
+            password="12345",
+            host="localhost",
+            port="5433"
+        )
+
         cur = conn.cursor()
-        cur.execute("SELECT user_id, amount, description, category, date FROM expenses WHERE user_id = %s", (current_user["id"],))
+        cur.execute("SELECT id, amount, description, category, date FROM expenses WHERE user_id = %s", (current_user["id"],))
         expenses = cur.fetchall()
         
-        expeses_list = []
+        expenses_list = []
         
         for row in expenses :
-            expeses_list.append({
+            expenses_list.append({
                 "id" : row[0] , 
                 "amount" : row[1],
                 "description" : row[2],
@@ -135,7 +150,7 @@ def get_expense(current_user: dict = Depends(get_current_user)):
                 "date" : row[4]
             })
             
-            return expeses_list
+        return expenses_list
     
    
     except Exception as e:
@@ -146,11 +161,17 @@ def get_expense(current_user: dict = Depends(get_current_user)):
             
 
 @app.put("/expense/{id}", tags=["expenses Update"])
-def update_expense(id: int , expense : Expense):
+def update_expense(id: int , expense : Expense , current_user: dict = Depends(get_current_user)):
     try:
-        conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a.singapore-postgres.render.com:5432/expenses_db_041z"))
+        conn = psycopg2.connect(
+            dbname="daily",
+            user="postgres",
+            password="12345",
+            host="localhost",
+            port="5433"
+        )
         cur = conn.cursor()
-        cur.execute("SELECT id FROM expenses WHERE id = %s ", (id,))
+        cur.execute("SELECT id FROM expenses WHERE id = %s AND user_id =%s", (id, current_user["id"]))
         if not cur.fetchone():
             cur.close()
             conn.close()
@@ -158,8 +179,8 @@ def update_expense(id: int , expense : Expense):
         cur.execute("""
             UPDATE expenses 
              SET amount=%s, category=%s, description=%s, date=%s 
-            WHERE id=%s
-        """, (expense.amount, expense.category, expense.description, expense.date, id ))
+            WHERE id=%s AND user_id = %s
+        """, (expense.amount, expense.category, expense.description, expense.date, id , current_user["id"]))
 
 
         conn.commit()
@@ -173,11 +194,19 @@ def update_expense(id: int , expense : Expense):
     
     
 @app.delete("/expense/{id}" , tags = ["expense delete"])
-def delete_expense(id : int) :
+def delete_expense(id : int , current_user : dict = Depends(get_current_user)) :
     try :
-        conn = psycopg2.connect(os.environ.get("postgresql://expenses_db_041z_user:rjWxMFHHMYBZvCdIQvPJ6mQuWAKb5Z2T@dpg-d2dfujc9c44c73f6n6o0-a.singapore-postgres.render.com:5432/expenses_db_041z"))
+        conn = psycopg2.connect(
+             dbname = "daily" ,
+             user = "postgres" , 
+             password = "12345" , 
+             host = "localhost" ,
+             port = "5433"
+             
+        )
+        
         cur = conn.cursor()
-        cur.execute("DELETE FROM expenses WHERE id = %s" , (id,))
+        cur.execute("DELETE FROM expenses WHERE id = %s AND user_id = %s" , (id, current_user["id"]))
         
         if not cur.rowcount:
             conn.rollback()
@@ -189,7 +218,7 @@ def delete_expense(id : int) :
 
     except Exception as e :
         return {"error" : str(e)}
-
+    
     finally :
         cur.close()
         conn.close()
