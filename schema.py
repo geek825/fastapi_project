@@ -5,7 +5,6 @@ from datetime import date
 
 from typing import List 
 
-
 class UserCreate(BaseModel):
     first_name: str
     last_name: str
@@ -27,13 +26,5 @@ class Expense(BaseModel) :
     category :str
     date : date
      
-     
-# class ExpenseUodate(BaseModel):
-#     amount = int
-#     description = str
-#     category = str
-#     date = date 
-      
-
     class Config:
         from_attributes = True

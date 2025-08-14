@@ -124,7 +124,7 @@ def add_expense(user : Expense , current_user:dict = Depends(get_current_user)) 
         return {"error" : str(e)}
     
     
-@app.get("/expense" , response_model=List[Expense] , tags = ["expense"])
+@app.get("/expense" , response_model=List[Expense] , tags = ["expense"] )
 def get_expense(current_user: dict = Depends(get_current_user)):
     try:
         conn = psycopg2.connect(
